@@ -65,7 +65,7 @@ gpu=0
 # Stage 1
 # python launch.py --config configs/fourdfy_stage_1.yaml --train --gpu $gpu exp_root_dir=$exp_root_dir seed=$seed system.prompt_processor.prompt="a dog riding a skateboard"
 
-# Stage 2
+# ~~Stage 2~~ (Drop VSD stage)
 # ckpt=/path/to/fourdfy_stage_1/a_dog_riding_a_skateboard@timestamp/ckpts/last.ckpt
 # python launch.py --config configs/fourdfy_stage_2.yaml --train --gpu $gpu exp_root_dir=$exp_root_dir seed=$seed system.prompt_processor.prompt="a dog riding a skateboard" system.weights=$ckpt
 
@@ -75,7 +75,7 @@ gpu=0
 ```
 
 ## Tips
-- **Memory Usage**. Depending on the text prompt, stage 3 might not fit on a 40/48 GB GPU. An easy way to reduce memory usage is to reduce the number of ray samples with system.renderer.num_samples_per_ray=256 or system.renderer.num_samples_per_ray=128. Another way is to reduce the rendering resolution for the video model with data.single_view.width_vid=144 and data.single_view.height_vid=80.
+- **Memory Usage**. Depending on the text prompt, stage 3 might not fit on a 40/48 GB GPU. An easy way to reduce memory usage is to reduce the number of ray samples with system.renderer.num_samples_per_ray=256 or system.renderer.num_samples_per_ray=128. Another way is to reduce the rendering resolution for the video model with data.single_view.width_vid=144 and data.single_view.height_vid=80. **Using modified parameters just fits on a 3090 for dog on skateboard demo**
 - **More motion**. To increase the motion, the learning rate for the video model can be increased to system.loss.lambda_sds_video=0.3 or system.loss.lambda_sds_video=0.5.
 
 
