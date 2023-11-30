@@ -23,7 +23,7 @@ class ZeroscopeGuidance(BaseObject):
     @dataclass
     class Config(BaseObject.Config):
         pretrained_model_name_or_path: str = None
-        enable_memory_efficient_attention: bool = False
+        enable_memory_efficient_attention: bool = True
         enable_sequential_cpu_offload: bool = False
         enable_attention_slicing: bool = False
         enable_channels_last_format: bool = False
@@ -182,8 +182,8 @@ class ZeroscopeGuidance(BaseObject):
         if normalize:
             imgs = imgs * 2.0 - 1.0
         # breakpoint()
-        posterior = self.vae.encode(imgs.to(self.weights_dtype)).latent_dist
-        latents = posterior.sample() * self.vae.config.scaling_factor
+        posterior = torch.cat([self.vae.encode(imgs[i:i+1].to(self.weights_dtype)).latent_dist.sample() for i in range(imgs.shape[0])], dim=0)
+        latents = posterior * self.vae.config.scaling_factor
 
         latents = (
             latents[None, :]

@@ -24,7 +24,7 @@ data:
     eval_width: 256
 
   multi_view:
-    batch_size: [8,4] # must be dividable by n_view
+    batch_size: [4,4] # must be dividable by n_view
     n_view: 4
     # 0-4999: 64x64, >=5000: 256x256
     width: [64, 256]
@@ -79,7 +79,7 @@ system:
   renderer_type: "nerf-volume-renderer"
   renderer:
     radius: ${system.geometry.radius}
-    num_samples_per_ray: 512
+    num_samples_per_ray: 256
 
   prompt_processor_type: "stable-diffusion-prompt-processor"
   prompt_processor:
