@@ -20,7 +20,7 @@ class NeRFVolumeRenderer(VolumeRenderer):
         num_samples_per_ray: int = 512
         randomized: bool = True
         eval_chunk_size: int = 160000
-        prune_alpha_threshold: bool = True
+        prune_alpha_threshold: bool = False #True
         return_comp_normal: bool = False
         return_normal_perturb: bool = False
         occ_grid_res: Optional[int] = 32
@@ -86,7 +86,9 @@ class NeRFVolumeRenderer(VolumeRenderer):
                 stratified=self.randomized,
                 cone_angle=0.0,
             )
-
+            
+        #ray_indices = torch.arange(len()).cuda()
+        
         ray_indices = ray_indices.long()
         t_starts, t_ends = t_starts_[..., None], t_ends_[..., None]
         t_origins = rays_o_flatten[ray_indices]
@@ -224,14 +226,17 @@ class NeRFVolumeRenderer(VolumeRenderer):
     def update_step(
         self, epoch: int, global_step: int, on_load_weights: bool = False
     ) -> None:
+        print('UPDATE')
         def occ_eval_fn(x):
             # Query random time for encoding
             encoding = self.geometry.encoding.encoding
             dynamic = not encoding.static
+            print('UPDATE', dynamic)
             if dynamic:
                 frame_time = encoding.frame_time
                 encoding.frame_time = torch.rand(1).item()
                 encoding.update_occ_grid = True
+                print('update_occ_grid', type(encoding))
             density = self.geometry.forward_density(x)
             if dynamic:
                 encoding.frame_time = frame_time

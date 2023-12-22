@@ -46,6 +46,15 @@ class BaseSystem(pl.LightningModule, Updateable, SaverMixin):
         state_dict, epoch, global_step = load_module_weights(
             weights, ignore_modules=ignore_modules, map_location="cpu"
         )
+        print(state_dict['renderer.estimator.occs'])
+        print(state_dict['renderer.estimator.occs'].mean())
+        print(state_dict['renderer.estimator.occs'].shape)
+        #quit()
+        #del state_dict['geometry.grid']
+        #del state_dict['renderer.estimator.occs']
+        #del state_dict['renderer.estimator.binaries']
+
+        #print(state_dict.keys())
         self.load_state_dict(state_dict, strict=False)
         # restore step-dependent states
         self.do_update_step(epoch, global_step, on_load_weights=True)

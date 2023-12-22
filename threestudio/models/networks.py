@@ -56,9 +56,13 @@ class TCNNEncoding(nn.Module):
     def __init__(self, in_channels, config, dtype=torch.float32) -> None:
         super().__init__()
         self.n_input_dims = in_channels
+        self.cfg = config_to_primitive(config)
         with torch.cuda.device(get_rank()):
-            self.encoding = tcnn.Encoding(in_channels, config, dtype=dtype)
+            self.encoding = tcnn.Encoding(in_channels, self.cfg, dtype=dtype)
         self.n_output_dims = self.encoding.n_output_dims
+        self.update_occ_grid = False
+        self.static = config.get("static", True)
+        self.frame_time = None
 
     def forward(self, x):
         return self.encoding(x)
@@ -188,7 +192,8 @@ def get_encoding(n_input_dims: int, config) -> nn.Module:
     elif config.otype == "HashGridSpatialTime":
         encoding = TCNNEncodingSpatialTime(n_input_dims, config)
     else:
-        encoding = TCNNEncoding(n_input_dims, config_to_primitive(config))
+        encoding = TCNNEncoding(n_input_dims, config)
+
     encoding = CompositeEncoding(
         encoding,
         include_xyz=config.get("include_xyz", False),

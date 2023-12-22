@@ -1,4 +1,4 @@
-name: "fourdfy_stage_1"
+name: "fourdfy_stage_1_lores"
 tag: "${rmspace:${system.prompt_processor.prompt},_}"
 exp_root_dir: "outputs"
 seed: 0
@@ -47,7 +47,7 @@ system_type: "fourdfy-system"
 system:
   prob_multi_view: ${data.prob_multi_view}
   stage: coarse
-  geometry_type: "implicit-volume"
+  geometry_type: "deformable-volume"
   geometry:
     radius: 1.0
     normal_type: "finite_difference"
@@ -58,8 +58,8 @@ system:
     density_blob_std: 0.5
 
     pos_encoding_config:
-      otype: HashGridSpatialTime
-      n_levels: 16
+      otype: HashGrid
+      n_levels: 8
       n_features_per_level: 2
       log2_hashmap_size: 19
       base_resolution: 16

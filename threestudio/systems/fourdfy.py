@@ -74,6 +74,7 @@ class Fourdfy(BaseLift3DSystem):
                 render_outs = []
                 # TODO: Handle batch size higher than 1
                 batch["frame_times"] = batch["frame_times"].flatten()
+                print('dynamic', batch["frame_times"])
                 for frame_idx, frame_time in enumerate(batch["frame_times"].tolist()):
                     self.geometry_encoding.frame_time = frame_time
                     if batch['train_dynamic_camera']:
@@ -111,7 +112,7 @@ class Fourdfy(BaseLift3DSystem):
             prompt_utils = self.prompt_utils_video
             static = self.static
             self.geometry_encoding.is_video = True
-            self.geometry_encoding.set_temp_param_grad(True)
+            #self.geometry_encoding.set_temp_param_grad(True)
         else:
             if batch['single_view']:
                 guidance = self.guidance_single_view
@@ -123,7 +124,7 @@ class Fourdfy(BaseLift3DSystem):
             num_static_frames = 1 # Use a single random time for static guidance
             batch["frame_times"] = batch["frame_times"][torch.randperm(batch["frame_times"].shape[0])][:num_static_frames]
             self.geometry_encoding.is_video = False
-            self.geometry_encoding.set_temp_param_grad(False)
+            #self.geometry_encoding.set_temp_param_grad(False)
         out = self(batch)
         if not self.static:
             if static:
@@ -156,6 +157,8 @@ class Fourdfy(BaseLift3DSystem):
             self.log(f"train/{name}", value)
             if name.startswith("loss_"):
                 loss += value * self.C(self.cfg.loss[name.replace("loss_", "lambda_")])
+                
+        loss += self.C(self.cfg.loss.lambda_tv)*self.geometry.get_reg_loss()
 
         if self.cfg.stage == "coarse":
             if self.C(self.cfg.loss.lambda_orient) > 0:

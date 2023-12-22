@@ -5,7 +5,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from diffusers import DDIMScheduler, DDPMScheduler, StableDiffusionPipeline
+from diffusers import DDIMScheduler, DDPMScheduler, StableDiffusionPipeline, AutoencoderTiny
 from diffusers.utils.import_utils import is_xformers_available
 
 import threestudio
@@ -66,9 +66,16 @@ class ZeroscopeGuidance(BaseObject):
         self.pipe = StableDiffusionPipeline.from_pretrained(
             self.cfg.pretrained_model_name_or_path,
             **pipe_kwargs,
-        ).to(self.device)
+        )
 
-        # Extra modules
+        self.pipe.vae = AutoencoderTiny.from_pretrained(
+            "madebyollin/taesd", 
+            torch_dtype=torch.float16, 
+            use_safetensors=True,)
+
+        self.pipe = self.pipe.to(self.device)
+
+        #Extra modules
         self.tokenizer = CLIPTokenizer.from_pretrained(
             self.cfg.pretrained_model_name_or_path, subfolder="tokenizer",
             torch_dtype=self.weights_dtype
@@ -77,7 +84,7 @@ class ZeroscopeGuidance(BaseObject):
             self.cfg.pretrained_model_name_or_path, subfolder="text_encoder",
             torch_dtype=self.weights_dtype
         )
-        self.text_encoder = self.text_encoder.to(self.device)
+        self.text_encoder = self.text_encoder.cpu() #to(self.device)
 
 
         if self.cfg.enable_memory_efficient_attention:
@@ -149,7 +156,8 @@ class ZeroscopeGuidance(BaseObject):
         self.grad_clip_val: Optional[float] = None
 
         # Extra for latents
-        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1)
+#        self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1)
+        self.vae_scale_factor = 2 ** (4 - 1)
 
         threestudio.info(f"Loaded Stable Diffusion!")
 
@@ -182,8 +190,8 @@ class ZeroscopeGuidance(BaseObject):
         if normalize:
             imgs = imgs * 2.0 - 1.0
         # breakpoint()
-        posterior = self.vae.encode(imgs.to(self.weights_dtype)).latent_dist
-        latents = posterior.sample() * self.vae.config.scaling_factor
+        posterior = self.vae.encode(imgs.to(self.weights_dtype)).latents #_dist
+        latents = posterior * self.vae.config.scaling_factor
 
         latents = (
             latents[None, :]
@@ -221,7 +229,7 @@ class ZeroscopeGuidance(BaseObject):
             .permute(0, 2, 1, 3, 4)
         )
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloat16
-        video = video.float()
+        #video = video.float()
         return video
 
     def compute_grad_sds(

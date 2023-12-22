@@ -59,7 +59,7 @@ system:
   prob_multi_view: ${data.prob_multi_view}
   prob_single_view_video: ${data.single_view.prob_single_view_video}
   stage: coarse
-  geometry_type: "implicit-volume"
+  geometry_type: "deformable-volume"
   geometry:
     radius: 1.0
     normal_type: "finite_difference"
@@ -70,8 +70,8 @@ system:
     density_blob_std: 0.5
 
     pos_encoding_config:
-      otype: HashGridSpatialTime
-      n_levels: 16
+      otype: HashGrid
+      n_levels: 8
       n_features_per_level: 2
       log2_hashmap_size: 19
       base_resolution: 16
@@ -154,14 +154,14 @@ system:
 
   loss:
     lambda_sds: 1.
-    lambda_sds_video: 0.1
+    lambda_sds_video: 1.0
     lambda_vsd: 1.
     lambda_lora: 1.
     lambda_orient: 0.
     lambda_sparsity: 10.
     lambda_opaque: [10000, 0.0, 1000.0, 10001]
     lambda_z_variance: 0.
-    lambda_tv: 0.
+    lambda_tv: 1.0
   optimizer:
     name: AdamW
     args:
@@ -169,13 +169,17 @@ system:
       eps: 1.e-15
     params:
       geometry.encoding.encoding.encoding:
-        lr: 0.0001
-      geometry.encoding.encoding.encoding_time:
-        lr: 0.01
+        lr: 0.000001
+#      geometry.encoding.encoding.encoding_time:
+#        lr: 0.01
       geometry.density_network:
+        lr: 0.00001
+      geometry.deformation_network:
         lr: 0.001
+      geometry.grid:
+        lr: 0.01
       geometry.feature_network:
-        lr: 0.001
+        lr: 0.00001
       background:
         lr: 0.001
       guidance:
